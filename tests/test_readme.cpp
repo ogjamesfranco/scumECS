@@ -17,6 +17,11 @@ int main()
 		scum::ID id = manager.newID(); // make a new entity
 		manager.add<MyComponent>(id, 7, true); // add a component to it
 		manager.add<OtherComponent>(id);
+
+		// or use the entity wrapper API
+		scum::Entity ent = manager.newEntity();
+		ent.add<MyComponent>(7, true);
+		ent.add<OtherComponent>();
 	}
 
 	// iterate over all components in a pool

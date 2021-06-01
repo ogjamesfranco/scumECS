@@ -74,7 +74,7 @@ struct ComponentPair
 {
 	ComponentPair(ID& id, C& data);
 
-	ID& id;
+	ID id;
 	C& data;
 };
 

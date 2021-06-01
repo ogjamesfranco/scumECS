@@ -9,6 +9,7 @@ namespace scum
 
 template<typename... Cs>
 class Search;
+class Entity;
 
 // the core class of the entity system. contains a set of pools, each of which
 // contains components of a particular type. also manages entity IDs
@@ -17,7 +18,10 @@ class Manager
 public:
 	Manager();
 	~Manager();
+
 	ID newID();
+	Entity newEntity();
+
 	template<typename C, typename... Args>
 	C* add(ID id, Args... args);
 	template<typename C>
@@ -29,6 +33,8 @@ public:
 	void queueDestroy(ID id);
 	void processQueues();
 
+	template<typename C>
+	bool contains(ID id);
 	template<typename C>
 	C* get(ID id);
 	template<typename C>
@@ -51,6 +57,7 @@ private:
 }
 
 #include "Search.h"
+#include "Entity.h"
 
 namespace scum
 {
@@ -83,6 +90,11 @@ inline ID Manager::newID()
 
 	nextID += 4096;
 	return nextID;
+}
+
+inline Entity Manager::newEntity()
+{
+	return Entity(*this, newID());
 }
 
 // adds a component to an entity
@@ -159,6 +171,12 @@ Pool<C>& Manager::getPool()
 
 	return static_cast<Pool<C>&>
 		(*(pools[lookupTable.find(type)->second]));
+}
+
+template<typename C>
+bool Manager::contains(ID id)
+{
+	return getPool<C>().contains(id);
 }
 
 // gets a component for a given entity.

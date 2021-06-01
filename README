@@ -6,7 +6,7 @@ Earlier versions looked very different, but I reworked my design significantly a
 
 ## Features/Design
 - Very small (~600 lines in total)
-- API supports various methods of data access
+- API offers various syntax styles for each operation
 - Simple and fast mechanism for searching for entities by component(s)
 - Entity IDs are recycled, eliminating risk of overflow
 	- Additionally, the ECS will provide a minimum of 4096 other IDs before reusing a given ID
