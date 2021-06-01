@@ -6,15 +6,15 @@
 namespace scum
 {
 
-class EntityManager;
+class Manager;
 
 template<typename... Cs>
-class EntitySearch;
+class Search;
 
 // an object which allows for quick lookup of all the entities which have
 // a certain set of components
 template<typename... Cs>
-class EntitySearch
+class Search
 {
 public:
 	class Iterator
@@ -22,12 +22,12 @@ public:
 	public:
 		using iterator_category = std::forward_iterator_tag;
 		using difference_type = std::ptrdiff_t;
-		using value_type = EntID;
-		using pointer = EntID*;
-		using reference = EntID&;
+		using value_type = ID;
+		using pointer = ID*;
+		using reference = ID&;
 
-		Iterator(EntitySearch* search, std::vector<EntID>::iterator cur,
-			std::vector<EntID>::iterator end);
+		Iterator(Search* search, std::vector<ID>::iterator cur,
+			std::vector<ID>::iterator end);
 		Iterator(const Iterator& other);
 		Iterator& operator=(const Iterator& other);
 		reference operator*() const;
@@ -46,34 +46,34 @@ public:
 	private:
 		bool valid() const;
 
-		EntitySearch<Cs...>* search;
-		std::vector<EntID>::iterator cur;
-		std::vector<EntID>::iterator end;
+		Search<Cs...>* search;
+		std::vector<ID>::iterator cur;
+		std::vector<ID>::iterator end;
 	};
 
-	EntitySearch(EntityManager& mgr);	
+	Search(Manager& mgr);	
 	auto begin();
 	auto end();
 
 private:
-	EntityManager& mgr;
-	ComponentPoolBase* smallest;
-	std::vector<ComponentPoolBase*> others;
+	Manager& mgr;
+	PoolBase* smallest;
+	std::vector<PoolBase*> others;
 
 	void getSmallest();
 	template<typename C, typename... OtherC>
-	ComponentPoolBase* getSmallestHelper();
+	PoolBase* getSmallestHelper();
 };
 
 }
 
-#include "EntityManager.h"
+#include "Manager.h"
 
 namespace scum
 {
 
 template<typename... Cs>
-bool EntitySearch<Cs...>::Iterator::valid() const
+bool Search<Cs...>::Iterator::valid() const
 {
 	bool valid = true;
 	for(auto* pool : search->others)
@@ -84,9 +84,9 @@ bool EntitySearch<Cs...>::Iterator::valid() const
 }
 
 template<typename... Cs>
-EntitySearch<Cs...>::Iterator::Iterator
-	(EntitySearch<Cs...>* search, std::vector<EntID>::iterator cur,
-	 std::vector<EntID>::iterator end)
+Search<Cs...>::Iterator::Iterator
+	(Search<Cs...>* search, std::vector<ID>::iterator cur,
+	 std::vector<ID>::iterator end)
 	: search(search), cur(cur), end(end)
 {
 	while(cur != search->smallest->entityEnd() && !valid())
@@ -96,12 +96,12 @@ EntitySearch<Cs...>::Iterator::Iterator
 }
 
 template<typename... Cs>
-EntitySearch<Cs...>::Iterator::Iterator(const Iterator& other)
+Search<Cs...>::Iterator::Iterator(const Iterator& other)
 	: search(other.search), cur(other.cur), end(other.end)
 {}
 
 template<typename... Cs>
-typename EntitySearch<Cs...>::Iterator& EntitySearch<Cs...>::Iterator::operator=
+typename Search<Cs...>::Iterator& Search<Cs...>::Iterator::operator=
 	(const Iterator& other)
 {
 	search = other.search;
@@ -111,13 +111,13 @@ typename EntitySearch<Cs...>::Iterator& EntitySearch<Cs...>::Iterator::operator=
 }
 
 template<typename... Cs>
-EntID& EntitySearch<Cs...>::Iterator::operator*() const
+ID& Search<Cs...>::Iterator::operator*() const
 {
 	return *cur;
 }
 
 template<typename... Cs>
-auto EntitySearch<Cs...>::Iterator::operator++()
+auto Search<Cs...>::Iterator::operator++()
 {
 	cur++;
 	while(cur != end && !valid())
@@ -128,7 +128,7 @@ auto EntitySearch<Cs...>::Iterator::operator++()
 }
 
 template<typename... Cs>
-auto EntitySearch<Cs...>::Iterator::operator++(int)
+auto Search<Cs...>::Iterator::operator++(int)
 {
 	Iterator it = *this;
 	++(*this);
@@ -137,7 +137,7 @@ auto EntitySearch<Cs...>::Iterator::operator++(int)
 
 // gets the smallest pool and uses it as the primary pool for future lookups.
 template<typename... Cs>
-void EntitySearch<Cs...>::getSmallest()
+void Search<Cs...>::getSmallest()
 {
 	others.clear();
 	smallest = getSmallestHelper<Cs...>();
@@ -145,16 +145,16 @@ void EntitySearch<Cs...>::getSmallest()
 
 template<typename... Cs>
 template<typename C, typename... OtherC>
-ComponentPoolBase* EntitySearch<Cs...>::getSmallestHelper()
+PoolBase* Search<Cs...>::getSmallestHelper()
 {
 	if constexpr (sizeof...(OtherC) == 0)
 	{
-		return mgr.getPool<C>();
+		return &(mgr.getPool<C>());
 	}
 	else
 	{
 		auto* small = getSmallestHelper<OtherC...>();
-		ComponentPoolBase* pool = mgr.getPool<C>();
+		PoolBase* pool = &(mgr.getPool<C>());
 		if(pool->size() < small->size())
 		{
 			others.push_back(small);
@@ -167,26 +167,26 @@ ComponentPoolBase* EntitySearch<Cs...>::getSmallestHelper()
 }
 
 template<typename... Cs>
-EntitySearch<Cs...>::EntitySearch(EntityManager& mgr) : mgr(mgr)
+Search<Cs...>::Search(Manager& mgr) : mgr(mgr)
 {
 	getSmallest();
 }
 
 // returns an iterator to the first entity which meets the requirements.
-// the iterator references objects of type EntID.
+// the iterator references objects of type ID.
 template<typename... Cs>
-auto EntitySearch<Cs...>::begin()
+auto Search<Cs...>::begin()
 {
-	return EntitySearch<Cs...>::Iterator
+	return Search<Cs...>::Iterator
 		(this, smallest->entityBegin(), smallest->entityEnd());
 }
 
 // returns an iterator to the end of the list of entities which meets 
-// the requirements. the iterator references objects of type EntID.
+// the requirements. the iterator references objects of type ID.
 template<typename... Cs>
-auto EntitySearch<Cs...>::end()
+auto Search<Cs...>::end()
 {
-	return EntitySearch<Cs...>::Iterator
+	return Search<Cs...>::Iterator
 		(this, smallest->entityEnd(), smallest->entityEnd());
 }
 

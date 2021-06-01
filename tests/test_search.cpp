@@ -1,7 +1,5 @@
-#include "scumECS.h"
-#include <iostream>
-
-using namespace scum;
+#include "scumECS/ECS.h"
+#include <string>
 
 struct String
 {
@@ -16,10 +14,10 @@ struct Buzz
 
 int main()
 {
-	EntityManager manager;
+	scum::Manager manager;
 	for(int i = 0; i < 100; i++)
 	{
-		EntID id = manager.newID();
+		auto id = manager.newID();
 		auto* cmp = manager.add<String>(id);
 
 		if(i % 3 == 0)
@@ -35,7 +33,7 @@ int main()
 	}
 
 	auto search = manager.search<Fizz, Buzz>();
-	for(EntID id : search)
+	for(auto id : search)
 	{
 		auto* cmp = manager.get<String>(id);
 		if(cmp->text != "fizzbuzz")

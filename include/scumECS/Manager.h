@@ -1,66 +1,66 @@
 #pragma once
 
 #include "Types.h"
-#include "ComponentPool.h"
+#include "Pool.h"
 #include <vector>
 
 namespace scum
 {
 
 template<typename... Cs>
-class EntitySearch;
+class Search;
 
 // the core class of the entity system. contains a set of pools, each of which
 // contains components of a particular type. also manages entity IDs
-class EntityManager
+class Manager
 {
 public:
-	EntityManager();
-	~EntityManager();
-	EntID newID();
+	Manager();
+	~Manager();
+	ID newID();
 	template<typename C, typename... Args>
-	C* add(EntID id, Args... args);
+	C* add(ID id, Args... args);
 	template<typename C>
-	void remove(EntID id);
-	void destroy(EntID id);
+	void remove(ID id);
+	void destroy(ID id);
 
 	template<typename C, typename... Args>
-	C* queueAdd(EntID id, Args... args);
-	void queueDestroy(EntID id);
+	C* queueAdd(ID id, Args... args);
+	void queueDestroy(ID id);
 	void processQueues();
 
 	template<typename C>
-	C* get(EntID id);
+	C* get(ID id);
 	template<typename C>
-	C* tryGet(EntID id);
+	C* tryGet(ID id);
 	template<typename C>
-	ComponentPool<C>* getPool();
+	Pool<C>& getPool();
 
 	template<typename... Cs>
-	EntitySearch<Cs...> search();
+	Search<Cs...> search();
 
 private:
-	std::vector<ComponentPoolBase*> pools;
+	std::vector<PoolBase*> pools;
 	AssocContainer<size_t, size_t> lookupTable;
-	std::vector<EntID> freeIDs;
-	EntID nextID = 0; // the ID counter starts at 1; 0 is reserved as "Null"
+	std::vector<ID> freeIDs;
+	ID nextID = 0; // the ID counter starts at 1; 0 is reserved as "Null"
 
-	std::vector<EntID> destroyQueue;
+	std::vector<ID> destroyQueue;
 };
 
 }
 
-#include "EntitySearch.h"
+#include "Search.h"
 
 namespace scum
 {
 
-inline EntityManager::EntityManager()
+inline Manager::Manager()
 {
-	freeIDs.push_back(nextID + 1); // add "1" as the first free EntID
+	freeIDs.push_back(nextID + 1); // add "1" as the first free ID
 }
 
-inline EntityManager::~EntityManager()
+inline Manager::~Manager()
 {
 	for(auto* pool : pools)
 	{
@@ -69,14 +69,14 @@ inline EntityManager::~EntityManager()
 }
 
 // returns a free ID. the manager is guaranteed to return at least
-// 1,048,576 other IDs before recycling a given previously used ID.
-// this is also the maximum number of simulataneous unique IDs - behavior
-// is undefined if an ID is requested when 1,048,576 are already in use.
-inline EntID EntityManager::newID()
+// 4,096 other IDs before recycling a given previously used ID.
+// there is a limit of 1,048,576 simultaneous unique IDs. generating new IDs
+// past that point is undefined behavior
+inline ID Manager::newID()
 {
 	if(freeIDs.size() != 0)
 	{
-		EntID id = freeIDs.back();
+		ID id = freeIDs.back();
 		freeIDs.pop_back();
 		return id;
 	}
@@ -87,27 +87,27 @@ inline EntID EntityManager::newID()
 
 // adds a component to an entity
 template<typename C, typename... Args>
-C* EntityManager::add(EntID id, Args... args)
+C* Manager::add(ID id, Args... args)
 {
-	return getPool<C>()->add(id, std::forward<Args>(args)...);
+	return getPool<C>().add(id, std::forward<Args>(args)...);
 }
 
 // queues a component for addition to an entity
 template<typename C, typename... Args>
-C* EntityManager::queueAdd(EntID id, Args... args)
+C* Manager::queueAdd(ID id, Args... args)
 {
-	return getPool<C>()->queueAdd(id, std::forward<Args>(args)...);
+	return getPool<C>().queueAdd(id, std::forward<Args>(args)...);
 }
 
 // removes a component from an entity
 template<typename C>
-void EntityManager::remove(EntID id)
+void Manager::remove(ID id)
 {
-	getPool<C>()->remove(id);
+	getPool<C>().remove(id);
 }
 
 // removes all components from an entity, then frees the ID
-inline void EntityManager::destroy(EntID id)
+inline void Manager::destroy(ID id)
 {
 	for(auto pool : pools)
 	{
@@ -125,13 +125,13 @@ inline void EntityManager::destroy(EntID id)
 }
 
 // queues a component for destruction
-inline void EntityManager::queueDestroy(EntID id)
+inline void Manager::queueDestroy(ID id)
 {
 	destroyQueue.push_back(id);
 }
 
 // applies all queued additions, removals, and destructions for all pools
-inline void EntityManager::processQueues()
+inline void Manager::processQueues()
 {
 	for(auto* pool : pools)
 	{
@@ -148,40 +148,40 @@ inline void EntityManager::processQueues()
 // will add a pool if one doesn't exist. pointers or references to pools
 // are guaranteed to remain valid for the duration of the manager's lifetime.
 template<typename C>
-ComponentPool<C>* EntityManager::getPool()
+Pool<C>& Manager::getPool()
 {
 	size_t type = typeid(C).hash_code();
 	if(lookupTable.find(type) == lookupTable.end())
 	{
-		pools.push_back(new ComponentPool<C>);
+		pools.push_back(new Pool<C>);
 		lookupTable.insert(std::pair<size_t,size_t>(type, pools.size()-1));
 	}
 
-	return static_cast<ComponentPool<C>*>
-		(pools[lookupTable.find(type)->second]);
+	return static_cast<Pool<C>&>
+		(*(pools[lookupTable.find(type)->second]));
 }
 
 // gets a component for a given entity.
 // behavior is undefined if the entity doesn't have the component
 template<typename C>
-C* EntityManager::get(EntID id)
+C* Manager::get(ID id)
 {
-	return getPool<C>()->get(id);
+	return getPool<C>().get(id);
 }
 
 // attempts to get a component for a given entity.
 // returns nullptr if the entity doesn't have the component
 template<typename C>
-C* EntityManager::tryGet(EntID id)
+C* Manager::tryGet(ID id)
 {
-	return getPool<C>()->tryGet(id);
+	return getPool<C>().tryGet(id);
 }
 
 // returns an entity search for the given components
 template<typename... Cs>
-EntitySearch<Cs...> EntityManager::search()
+Search<Cs...> Manager::search()
 {
-	return EntitySearch<Cs...>(*this);
+	return Search<Cs...>(*this);
 }
 
 }
