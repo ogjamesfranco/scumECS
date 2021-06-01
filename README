@@ -12,7 +12,8 @@ Earlier versions looked very different, but I reworked my design significantly a
 	- Additionally, the ECS will provide a minimum of 4096 other IDs before reusing a given ID
 - Each type of component is stored in a contiguous array with no gaps or placeholder data
 - Hash tables are used for constant-time lookup of components and pools
-	-The underlying hash table class can be changed by editing a single typedef in Types.h
+	- The underlying hash table class can be changed by editing a single typedef in include/scumECS/Types.h
+	- Tessil's fantastic [Robin Map](https://github.com/Tessil/robin-map) is included and used by default, but the library is also tested with std::unordered_map
 - Built-in queue system for delayed addition or removal of components
 
 ## Limitations
@@ -23,6 +24,7 @@ The Manager class represents a collection of pools, each containing components o
 You can _add components_ through the manager, or you can get a specific pool and add them that way.
 To _retrieve components_, you can go through the manager, pools, or a search.
 A _search_ lets you iterate over all the entities that have a certain set of components with minimal additional performance cost.
+Since references/pointers to components are quickly invalidated, the preferred way to store a reference to a component is by storing the entity's ID. To this end, the constant scum::Null is provided, which will never be equal to an entity ID.
 
 ```
 #include <scumECS/ECS.h>
