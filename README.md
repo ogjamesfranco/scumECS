@@ -27,11 +27,11 @@ A _search_ lets you iterate over all the entities that have a certain set of com
 Since references/pointers to components are quickly invalidated, the preferred way to store a reference to a component is by storing the entity's ID. To this end, the constant scum::Null is provided, which will never be equal to an entity ID.
 
 ```
-#include <scumECS/ECS.h>
+#include "scumECS/ECS.h"
 
 struct MyComponent
 {
-	std::string myString;
+	int myInt;
 	bool myValue;
 };
 
@@ -43,30 +43,39 @@ int main()
 	scum::Manager manager;
 	for(int i = 0; i < 100; i++)
 	{
-		scum::EntID id = manager.newID(); // make a new entity
-		manager.add<MyComponent>(id, "example", true); // add a component to it
-		manager.add<OtherComponent(id);
+		scum::ID id = manager.newID(); // make a new entity
+		manager.add<MyComponent>(id, 7, true); // add a component to it
+		manager.add<OtherComponent>(id);
+
+		// or use the entity wrapper API
+		scum::Entity ent = manager.newEntity();
+		ent.add<MyComponent>(7, true);
+		ent.add<OtherComponent>();
 	}
 
 	// iterate over all components in a pool
-	for(auto& pair : manager.getPool<MyComponent>())
+	for(auto pair : manager.getPool<MyComponent>())
 	{
-		if(pair.second.myValue) // access component data
+		if(pair.data.myValue) // access component data
 		{
-			std::cout << pair.first << "\n"; // access associated entity ID
+			scum::ID id = pair.id; // access associated entity ID
+			// do stuff
 		}
 	}
 
 	// search for all entities with both Component and OtherComponent
-	scum::Search search = manager.search<Component, OtherComponent>();
-	for(scum::EntID id : search)
+	scum::Search search = manager.search<MyComponent, OtherComponent>();
+	for(scum::ID id : search)
 	{
 		manager.queueDestroy(id); // queue entity for destruction
 	}
 	
 	manager.processQueues(); // apply queued destructions
+	return 0;
 }
 ```
 
 ## License
-scumECS is released under the MIT License.
+scumECS is released under the MIT License. It also contains code from Tessil's
+Robin Map, which is released under the MIT License. Both licenses are included
+in the LICENSE file.
