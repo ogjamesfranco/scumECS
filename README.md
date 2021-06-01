@@ -1,11 +1,11 @@
 # scumECS
 
-*scumECS* is a very small, simple, header-only Entity Component System library.
-My goal was to write my own ECS with a convenient API and a data-oriented design that would encourage good performance. My intended use case is game development, but the library does not have any game-specific functionality. scumECS is designed for use as a pure "components are data" ECS, with all the functionality being handled by external "systems" which operate on component data.
+**scumECS** is a very small, simple, header-only Entity Component System library.  
+My goal was to write my own ECS with a convenient API and a data-oriented design that would encourage good performance. My intended use case is game development, but the library does not have any game-specific functionality. scumECS is designed for use as a pure "components are data" ECS, with all the functionality being handled by external "systems" which operate on component data.  
 Earlier versions looked very different, but I reworked my design significantly after being inspired by how [EnTT](https://github.com/skypjack/entt) dealt with certain ECS design problems very effectively.
 
 ## Features/Design
-- Very small (~600 lines in total)
+- Very small (~850 lines in total, not including Tessil's Robin Map)
 - API offers various syntax styles for each operation
 - Simple and fast mechanism for searching for entities by component(s)
 - Entity IDs are recycled, eliminating risk of overflow
@@ -20,13 +20,14 @@ Earlier versions looked very different, but I reworked my design significantly a
 - Removing or adding any components to pools while iterating over them invalidates references to components, including iterators. The provided queueing API can be used to circumvent this.
 
 ## Usage
-The Manager class represents a collection of pools, each containing components of a certain type.
-You can _add components_ through the manager, or you can get a specific pool and add them that way.
-To _retrieve components_, you can go through the manager, pools, or a search.
-A _search_ lets you iterate over all the entities that have a certain set of components with minimal additional performance cost.
+The Manager class represents a collection of pools, each containing components of a certain type.  
+You can __add components__ through the manager, or you can get a specific pool and add them that way.  
+To __retrieve components__, you can go through the manager, pools, or a search.  
+A __search__ lets you iterate over all the entities that have a certain set of components with minimal additional performance cost.  
+An __Entity__ wrapper class is also included as an alternate API for accessing components.  
 Since references/pointers to components are quickly invalidated, the preferred way to store a reference to a component is by storing the entity's ID. To this end, the constant scum::Null is provided, which will never be equal to an entity ID.
 
-```
+```cpp
 #include "scumECS/ECS.h"
 
 struct MyComponent
