@@ -25,8 +25,10 @@ You can __add components__ through the manager, or you can get a specific pool a
 To __retrieve components__, you can go through the manager, pools, or a search.  
 A __search__ lets you iterate over all the entities that have a certain set of components with minimal additional performance cost.  
 An __Entity__ wrapper class is also included as an alternate API for accessing components.  
+   
 Since references/pointers to components are quickly invalidated, the preferred way to store a reference to a component is by storing the entity's ID. To this end, the constant scum::Null is provided, which will never be equal to an entity ID.
 
+### Example
 ```cpp
 #include "scumECS/ECS.h"
 
