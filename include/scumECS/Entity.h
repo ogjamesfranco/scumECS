@@ -35,7 +35,7 @@ private:
 namespace scum
 {
 
-Entity::Entity(Manager& manager, ID id) : manager(manager), id(id)
+inline Entity::Entity(Manager& manager, ID id) : manager(manager), id(id)
 {}
 
 template<typename C>

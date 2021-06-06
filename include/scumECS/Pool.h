@@ -64,7 +64,7 @@ inline auto PoolBase::entityEnd()
 }
 
 // returns the number of components in the pool
-auto PoolBase::size() const
+inline auto PoolBase::size() const
 {
 	return entities.size();
 }
