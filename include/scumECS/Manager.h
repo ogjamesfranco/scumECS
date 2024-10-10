@@ -130,7 +130,7 @@ inline void Manager::destroy(ID id)
 	}
 
 	id++;
-	if(id & (4096 - 1) != 0) // equivalent to id % 4096
+	if((id & (4096 - 1)) != 0) // equivalent to id % 4096
 	{
 		freeIDs.push_back(id);
 	}
