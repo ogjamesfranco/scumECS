@@ -254,12 +254,13 @@ void Pool<C>::processQueues()
 template<typename C>
 void Pool<C>::remove(ID id)
 {
-	size_t index = lookupTable[id];
-	lookupTable[entities.back()] = index;
-	entities[index] = entities.back();
-	components[index] = components.back();
+	auto indexIter = lookupTable.find(id);
+	lookupTable[entities.back()] = indexIter->second;
+	entities[indexIter->second] = entities.back();
+	components[indexIter->second] = components.back();
 	components.pop_back();
 	entities.pop_back();
+	lookupTable.erase(indexIter);
 }
 
 // gets the component for a given ID. behavior is undefined if the entity
